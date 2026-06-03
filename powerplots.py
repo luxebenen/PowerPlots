@@ -2,9 +2,14 @@ import sys
 import numpy as np
 import pyqtgraph as pg
 
-from PyQt5 import uic
-from PyQt5.QtCore import QThread, QTimer, pyqtSignal, Qt
-from PyQt5.QtWidgets import QApplication, QMainWindow
+from PySide6 import QtWidgets, QtCore, QtUiTools
+
+QThread = QtCore.QThread
+QTimer = QtCore.QTimer
+Signal = QtCore.Signal
+Qt = QtCore.Qt
+QApplication = QtWidgets.QApplication
+QMainWindow = QtWidgets.QMainWindow
 
 # Switch to using white background and black foreground
 # pg.setConfigOption('background', 'w')
@@ -21,7 +26,7 @@ sys.excepthook = trap_exc_during_debug
 
 class playbackThread(QThread):
 
-    sig_step = pyqtSignal()
+    sig_step = Signal()
 
     def __init__(self):
         QThread.__init__(self)
@@ -141,7 +146,19 @@ class PowerPlotApp(QMainWindow):
 
     def __init__(self):
         super(PowerPlotApp, self).__init__()
-        uic.loadUi("powerplots.ui", self)
+
+        loader = QtUiTools.QUiLoader()
+
+        loader.registerCustomWidget(pg.PlotWidget)
+
+        self.ui = loader.load("powerplots.ui")
+
+        self.setCentralWidget(self.ui)
+
+        # alle ui dingen zitten nu in self.ui, niet in self.
+        # quick hack zodat self.button blijft werken
+        self.__dict__.update(self.ui.__dict__)
+
         self.show()
 
         # initialize calculation values
@@ -649,7 +666,7 @@ def main():
     app.aboutToQuit.connect(app.deleteLater)
     window = PowerPlotApp()
     window.show()
-    app.exec_()
+    app.exec()
 
 
 if __name__ == "__main__":
