@@ -352,7 +352,7 @@ class PowerPlotApp(QMainWindow):
             self.reactive_power.setValue(Q * 100)
             self.reactive_power.blockSignals(False)
 
-        pf = P / S
+        pf = P / S if S != 0 else np.nan
         indcap = ""
         if P * Q > 0:
             indcap = " IND"
