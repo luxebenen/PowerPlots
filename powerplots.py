@@ -278,24 +278,24 @@ class PowerPlotApp(QMainWindow):
         self.playback_stepsize = 10 ** (self.playback_speed.value() / 50) / 10
 
     def update_current_from_power(self, changed):
-        if changed is 'S':
+        if changed == "S":
             S = self.apparent_power.value() / 100
             self.I0 = S / self.U0
-        if changed is 'P':
+        if changed == "P":
             P = self.active_power.value() / 100
             Q = np.imag(self.S0complex)
             S = P + 1j * Q
             self.I0 = np.abs(S) / self.U0
             self.Iangle_rad = -np.angle(S) + self.Uangle_rad
             self.Iangle_deg = self.Iangle_rad / np.pi * 180
-        if changed is 'Q':
+        if changed == "Q":
             Q = self.reactive_power.value() / 100
             P = np.real(self.S0complex)
             S = P + 1j * Q
             self.I0 = np.abs(S) / self.U0
             self.Iangle_rad = -np.angle(S) + self.Uangle_rad
             self.Iangle_deg = self.Iangle_rad / np.pi * 180
-        if changed is 'pf':
+        if changed == "pf":
             Sangle_deg = (self.power_factor.value() + 90) % 360 - 180
             Sangle_rad = Sangle_deg / 180 * np.pi
             S = np.abs(self.S0complex) * np.exp(1j * Sangle_rad)
