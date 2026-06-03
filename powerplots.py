@@ -41,45 +41,46 @@ class playbackThread(QThread):
 class PowerPlotApp(QMainWindow):
 
     RESET_ANIMATION = np.array(
-        [1 - (np.tanh(x) + 1) / 2
-        for x
-        in np.linspace(-2, 2, 30)]
-        )
+        [1 - (np.tanh(x) + 1) / 2 for x in np.linspace(-2, 2, 30)]
+    )
 
     # calculation functions
-    def U(self,
-            U0=None,
-            Uangle=None,
-            phi=None,
-            ):
+    def U(
+        self,
+        U0=None,
+        Uangle=None,
+        phi=None,
+    ):
         if U0 is None:
             U0 = self.U0
         if Uangle is None:
             Uangle = self.Uangle_rad
         if phi is None:
             phi = self.inst_phi_rad
-        return U0 * np.exp(1j*Uangle) * np.exp(1j*phi)
+        return U0 * np.exp(1j * Uangle) * np.exp(1j * phi)
 
-    def I(self,
-            I0=None,
-            Iangle=None,
-            phi=None,
-            ):
+    def I(
+        self,
+        I0=None,
+        Iangle=None,
+        phi=None,
+    ):
         if I0 is None:
             I0 = self.I0
         if Iangle is None:
             Iangle = self.Iangle_rad
         if phi is None:
             phi = self.inst_phi_rad
-        return I0 * np.exp(1j*Iangle) * np.exp(1j*phi)
+        return I0 * np.exp(1j * Iangle) * np.exp(1j * phi)
 
-    def S1(self,
-            U0=None,
-            Uangle=None,
-            I0=None,
-            Iangle=None,
-            phi=None,
-            ):
+    def S1(
+        self,
+        U0=None,
+        Uangle=None,
+        I0=None,
+        Iangle=None,
+        phi=None,
+    ):
         if U0 is None:
             U0 = self.U0
         if Uangle is None:
@@ -90,16 +91,40 @@ class PowerPlotApp(QMainWindow):
             Iangle = self.Iangle_rad
         if phi is None:
             phi = self.inst_phi_rad
-        return self.U(U0=U0, Uangle=Uangle, phi=phi) * \
+        return self.U(U0=U0, Uangle=Uangle, phi=phi) * self.I(
+            I0=I0, Iangle=Iangle, phi=phi
+        )
+
+    def S0(
+        self,
+        U0=None,
+        Uangle=None,
+        I0=None,
+        Iangle=None,
+        phi=None,
+    ):
+        if U0 is None:
+            U0 = self.U0
+        if Uangle is None:
+            Uangle = self.Uangle_rad
+        if I0 is None:
+            I0 = self.I0
+        if Iangle is None:
+            Iangle = self.Iangle_rad
+        if phi is None:
+            phi = self.inst_phi_rad
+        return self.U(U0=U0, Uangle=Uangle, phi=phi) * np.conj(
             self.I(I0=I0, Iangle=Iangle, phi=phi)
+        )
 
-    def S0(self,
-            U0=None,
-            Uangle=None,
-            I0=None,
-            Iangle=None,
-            phi=None,
-            ):
+    def S(
+        self,
+        U0=None,
+        Uangle=None,
+        I0=None,
+        Iangle=None,
+        phi=None,
+    ):
         if U0 is None:
             U0 = self.U0
         if Uangle is None:
@@ -110,32 +135,13 @@ class PowerPlotApp(QMainWindow):
             Iangle = self.Iangle_rad
         if phi is None:
             phi = self.inst_phi_rad
-        return self.U(U0=U0, Uangle=Uangle, phi=phi) * \
-            np.conj(self.I(I0=I0, Iangle=Iangle, phi=phi))
-
-    def S(self,
-            U0=None,
-            Uangle=None,
-            I0=None,
-            Iangle=None,
-            phi=None,
-            ):
-        if U0 is None:
-            U0 = self.U0
-        if Uangle is None:
-            Uangle = self.Uangle_rad
-        if I0 is None:
-            I0 = self.I0
-        if Iangle is None:
-            Iangle = self.Iangle_rad
-        if phi is None:
-            phi = self.inst_phi_rad
-        return self.S0(U0=U0, Uangle=Uangle, I0=I0, Iangle=Iangle, phi=phi) + \
-            self.S1(U0=U0, Uangle=Uangle, I0=I0, Iangle=Iangle, phi=phi)
+        return self.S0(U0=U0, Uangle=Uangle, I0=I0, Iangle=Iangle, phi=phi) + self.S1(
+            U0=U0, Uangle=Uangle, I0=I0, Iangle=Iangle, phi=phi
+        )
 
     def __init__(self):
         super(PowerPlotApp, self).__init__()
-        uic.loadUi('powerplots.ui', self)
+        uic.loadUi("powerplots.ui", self)
         self.show()
 
         # initialize calculation values
@@ -173,56 +179,36 @@ class PowerPlotApp(QMainWindow):
         self.playback_speed_changed()
 
         # signal connectors for voltage_amplitude
-        self.voltage_amplitude.valueChanged.connect(
-            self.voltage_amplitude_changed
-            )
+        self.voltage_amplitude.valueChanged.connect(self.voltage_amplitude_changed)
 
         # signal connectors for voltage_phase_angle
-        self.voltage_phase_angle.valueChanged.connect(
-            self.voltage_phase_angle_changed
-            )
+        self.voltage_phase_angle.valueChanged.connect(self.voltage_phase_angle_changed)
 
         # signal connectors for current_amplitude
-        self.current_amplitude.valueChanged.connect(
-            self.current_amplitude_changed
-            )
+        self.current_amplitude.valueChanged.connect(self.current_amplitude_changed)
 
         # signal connectors for current_phase_angle
-        self.current_phase_angle.valueChanged.connect(
-            self.current_phase_angle_changed
-            )
+        self.current_phase_angle.valueChanged.connect(self.current_phase_angle_changed)
 
         # signal connectors for apparent_power
-        self.apparent_power.valueChanged.connect(
-            self.apparent_power_changed
-            )
+        self.apparent_power.valueChanged.connect(self.apparent_power_changed)
 
         # signal connectors for power_factor
-        self.power_factor.valueChanged.connect(
-            self.power_factor_changed
-            )
+        self.power_factor.valueChanged.connect(self.power_factor_changed)
 
         # signal connectors for active_power
-        self.active_power.valueChanged.connect(
-            self.active_power_changed
-            )
+        self.active_power.valueChanged.connect(self.active_power_changed)
 
         # signal connectors for reactive_power
-        self.reactive_power.valueChanged.connect(
-            self.reactive_power_changed
-            )
+        self.reactive_power.valueChanged.connect(self.reactive_power_changed)
 
         # signal connectors for playback
         self.instantaneous_phase_angle.valueChanged.connect(
             self.instantaneous_phase_angle_changed
-            )
-        self.playback_speed.valueChanged.connect(
-            self.playback_speed_changed
-            )
+        )
+        self.playback_speed.valueChanged.connect(self.playback_speed_changed)
         self.playback_button.clicked.connect(self.start_playback)
-        self.playback_reset_button.clicked.connect(
-            self.reset_instantaneous_phase
-            )
+        self.playback_reset_button.clicked.connect(self.reset_instantaneous_phase)
 
         # initialize playback thread
         self.playback_thread = playbackThread()
@@ -258,37 +244,34 @@ class PowerPlotApp(QMainWindow):
         self.update_plots()
 
     def apparent_power_changed(self):
-        self.update_current_from_power(changed='S')
+        self.update_current_from_power(changed="S")
         self.update_calculations()
-        self.update_power_dials_displays(exclude='S')
+        self.update_power_dials_displays(exclude="S")
         self.update_plots()
 
     def active_power_changed(self):
-        self.update_current_from_power(changed='P')
+        self.update_current_from_power(changed="P")
         self.update_calculations()
-        self.update_power_dials_displays(exclude='P')
+        self.update_power_dials_displays(exclude="P")
         self.update_plots()
 
     def reactive_power_changed(self):
-        self.update_current_from_power(changed='Q')
+        self.update_current_from_power(changed="Q")
         self.update_calculations()
-        self.update_power_dials_displays(exclude='Q')
+        self.update_power_dials_displays(exclude="Q")
         self.update_plots()
 
     def power_factor_changed(self):
-        self.update_current_from_power(changed='pf')
+        self.update_current_from_power(changed="pf")
         self.update_calculations()
-        self.update_power_dials_displays(exclude='pf')
+        self.update_power_dials_displays(exclude="pf")
         self.update_plots()
 
     def instantaneous_phase_angle_changed(self):
-        self.inst_phi_deg = \
-            (self.instantaneous_phase_angle.value() + 90) % 360 - 180
+        self.inst_phi_deg = (self.instantaneous_phase_angle.value() + 90) % 360 - 180
         self.inst_phi_rad = self.inst_phi_deg / 180 * np.pi
         self.update_calculations()
-        self.instantaneous_phase_display.setText(
-            "{:0.0f}".format(self.inst_phi_deg)
-            )
+        self.instantaneous_phase_display.setText("{:0.0f}".format(self.inst_phi_deg))
         self.update_plots()
 
     def playback_speed_changed(self):
@@ -301,14 +284,14 @@ class PowerPlotApp(QMainWindow):
         if changed is 'P':
             P = self.active_power.value() / 100
             Q = np.imag(self.S0complex)
-            S = P + 1j*Q
+            S = P + 1j * Q
             self.I0 = np.abs(S) / self.U0
             self.Iangle_rad = -np.angle(S) + self.Uangle_rad
             self.Iangle_deg = self.Iangle_rad / np.pi * 180
         if changed is 'Q':
             Q = self.reactive_power.value() / 100
             P = np.real(self.S0complex)
-            S = P + 1j*Q
+            S = P + 1j * Q
             self.I0 = np.abs(S) / self.U0
             self.Iangle_rad = -np.angle(S) + self.Uangle_rad
             self.Iangle_deg = self.Iangle_rad / np.pi * 180
@@ -330,77 +313,65 @@ class PowerPlotApp(QMainWindow):
         self.current_phase_angle.blockSignals(False)
         self.current_phase_display.setText("{:0.0f}".format(self.Iangle_deg))
 
-    def update_power_dials_displays(self, exclude=''):
+    def update_power_dials_displays(self, exclude=""):
         S = np.abs(self.S0complex)
-        self.apparent_power_display.setText(
-            "{:0.2f}".format(S)
-            )
-        if 'S' not in exclude:
+        self.apparent_power_display.setText("{:0.2f}".format(S))
+        if "S" not in exclude:
             self.apparent_power.blockSignals(True)
-            self.apparent_power.setValue(S*100)
+            self.apparent_power.setValue(S * 100)
             self.apparent_power.blockSignals(False)
 
         P = np.real(self.S0complex)
-        self.active_power_display.setText(
-            "{:0.2f}".format(P)
-            )
-        if 'P' not in exclude:
+        self.active_power_display.setText("{:0.2f}".format(P))
+        if "P" not in exclude:
             self.active_power.blockSignals(True)
-            self.active_power.setValue(P*100)
+            self.active_power.setValue(P * 100)
             self.active_power.blockSignals(False)
 
         Q = np.imag(self.S0complex)
-        self.reactive_power_display.setText(
-            "{:0.2f}".format(Q)
-            )
-        if 'Q' not in exclude:
+        self.reactive_power_display.setText("{:0.2f}".format(Q))
+        if "Q" not in exclude:
             self.reactive_power.blockSignals(True)
-            self.reactive_power.setValue(Q*100)
+            self.reactive_power.setValue(Q * 100)
             self.reactive_power.blockSignals(False)
 
         pf = P / S
         indcap = ""
-        if P*Q > 0:
+        if P * Q > 0:
             indcap = " IND"
-        elif P*Q < 0:
+        elif P * Q < 0:
             indcap = " CAP"
-        self.power_factor_display.setText(
-            "{:0.2f}{}".format(pf, indcap)
-            )
-        if 'pf' not in exclude:
+        self.power_factor_display.setText("{:0.2f}{}".format(pf, indcap))
+        if "pf" not in exclude:
             self.power_factor.blockSignals(True)
             self.power_factor.setValue(
                 (self.Uangle_deg - self.Iangle_deg + 90 + 360) % 360
-                )
+            )
             self.power_factor.blockSignals(False)
 
     def start_playback(self):
         self.playback_reset_button.setEnabled(False)
         self.instantaneous_phase_angle.setEnabled(False)
-        self.playback_button.setText('Pause')
+        self.playback_button.setText("Pause")
         self.playback_button.clicked.disconnect(self.start_playback)
         self.playback_button.clicked.connect(self.stop_playback)
         self.instantaneous_phase_angle.valueChanged.disconnect(
             self.instantaneous_phase_angle_changed
-            )
-        self.playback_thread.sig_step.connect(
-            self.increment_instantaneous_phase
-            )
+        )
+        self.playback_thread.sig_step.connect(self.increment_instantaneous_phase)
         self.playback_thread.start()
 
     def stop_playback(self):
         self.playback_thread.stop()
-        self.playback_thread.sig_step.disconnect(
-            self.increment_instantaneous_phase
-            )
+        self.playback_thread.sig_step.disconnect(self.increment_instantaneous_phase)
         self.playback_reset_button.setEnabled(True)
         self.instantaneous_phase_angle.setEnabled(True)
-        self.playback_button.setText('Play')
+        self.playback_button.setText("Play")
         self.playback_button.clicked.disconnect(self.stop_playback)
         self.playback_button.clicked.connect(self.start_playback)
         self.instantaneous_phase_angle.valueChanged.connect(
             self.instantaneous_phase_angle_changed
-            )
+        )
 
     def init_phasor_plot(self):
         xmin = -2
@@ -408,12 +379,12 @@ class PowerPlotApp(QMainWindow):
         ymin = -2
         ymax = 2
 
-        self.phasor_plot.setTitle('Phasors')
-        self.phasor_plot.setLabel('bottom', text='Real', units='p.u.')
-        self.phasor_plot.setLabel('left', text='Imaginary', units='p.u.')
+        self.phasor_plot.setTitle("Phasors")
+        self.phasor_plot.setLabel("bottom", text="Real", units="p.u.")
+        self.phasor_plot.setLabel("left", text="Imaginary", units="p.u.")
         self.phasor_plot.showGrid(x=True, y=True)
-        self.phasor_plot.getAxis('bottom').setTickSpacing(major=1, minor=.1)
-        self.phasor_plot.getAxis('left').setTickSpacing(major=1, minor=.1)
+        self.phasor_plot.getAxis("bottom").setTickSpacing(major=1, minor=0.1)
+        self.phasor_plot.getAxis("left").setTickSpacing(major=1, minor=0.1)
         self.phasor_plot.addLegend(offset=[30, -30])
         self.phasor_plot.setAspectLocked(True, ratio=1)
         self.phasor_plot.disableAutoRange()
@@ -422,14 +393,14 @@ class PowerPlotApp(QMainWindow):
 
         self.phasor_plot.addLine(
             x=0,
-            pen=pg.mkPen('w', width=2, style=Qt.DashLine),
+            pen=pg.mkPen("w", width=2, style=Qt.DashLine),
             z=-1,
-            )
+        )
         self.phasor_plot.addLine(
             y=0,
-            pen=pg.mkPen('w', width=2, style=Qt.DashLine),
+            pen=pg.mkPen("w", width=2, style=Qt.DashLine),
             z=-1,
-            )
+        )
 
         # self.phasor_plot.canvas.axes.axhline(color='black', zorder=1, lw=1)
         # self.phasor_plot.canvas.axes.axvline(color='black', zorder=1, lw=1)
@@ -439,41 +410,41 @@ class PowerPlotApp(QMainWindow):
         #     np.imag(unity_circle), '0.2', zorder=-1, lw=1)
 
         self.phasor_lines = {}
-        self.phasor_lines['U'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='b', width=3),
-            name='U',
-            )
-        self.phasor_lines['I'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='r', width=3),
-            name='I',
-            )
-        self.phasor_lines['S'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='g', width=3),
-            name='S',
-            )
+        self.phasor_lines["U"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="b", width=3),
+            name="U",
+        )
+        self.phasor_lines["I"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="r", width=3),
+            name="I",
+        )
+        self.phasor_lines["S"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="g", width=3),
+            name="S",
+        )
 
         self.phasor_circles = {}
-        self.phasor_circles['U'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='b', width=1, style=Qt.DotLine),
-            )
-        self.phasor_circles['I'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='r', width=1, style=Qt.DotLine),
-            )
-        self.phasor_circles['S'] = self.phasor_plot.plot(
-            pen=pg.mkPen(color='g', width=1, style=Qt.DotLine),
-            )
+        self.phasor_circles["U"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="b", width=1, style=Qt.DotLine),
+        )
+        self.phasor_circles["I"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="r", width=1, style=Qt.DotLine),
+        )
+        self.phasor_circles["S"] = self.phasor_plot.plot(
+            pen=pg.mkPen(color="g", width=1, style=Qt.DotLine),
+        )
 
         # phasor valuelines
         self.phasor_values = {}
-        self.phasor_values['U'] = self.phasor_plot.addLine(
-            x=0,
-            pen=pg.mkPen(color='b', width=2, style=Qt.DotLine))
-        self.phasor_values['I'] = self.phasor_plot.addLine(
-            x=0,
-            pen=pg.mkPen(color='r', width=2, style=Qt.DotLine))
-        self.phasor_values['P'] = self.phasor_plot.addLine(
-            x=0,
-            pen=pg.mkPen(color='g', width=2, style=Qt.DotLine))
+        self.phasor_values["U"] = self.phasor_plot.addLine(
+            x=0, pen=pg.mkPen(color="b", width=2, style=Qt.DotLine)
+        )
+        self.phasor_values["I"] = self.phasor_plot.addLine(
+            x=0, pen=pg.mkPen(color="r", width=2, style=Qt.DotLine)
+        )
+        self.phasor_values["P"] = self.phasor_plot.addLine(
+            x=0, pen=pg.mkPen(color="g", width=2, style=Qt.DotLine)
+        )
         # self.phasor_values['Q'] = self.phasor_plot.canvas.axes.axhline(
         #     color='c', zorder=32, lw=1, ls='--')
 
@@ -483,12 +454,12 @@ class PowerPlotApp(QMainWindow):
         ymin = -2
         ymax = 2
 
-        self.sinewave_plot.setTitle('Waveforms')
-        self.sinewave_plot.setLabel('bottom', text='Angle', units='degree')
-        self.sinewave_plot.setLabel('left', text='Value', units='p.u.')
+        self.sinewave_plot.setTitle("Waveforms")
+        self.sinewave_plot.setLabel("bottom", text="Angle", units="degree")
+        self.sinewave_plot.setLabel("left", text="Value", units="p.u.")
         self.sinewave_plot.showGrid(x=True, y=True)
-        self.sinewave_plot.getAxis('bottom').setTickSpacing(major=90, minor=30)
-        self.sinewave_plot.getAxis('left').setTickSpacing(major=1, minor=.1)
+        self.sinewave_plot.getAxis("bottom").setTickSpacing(major=90, minor=30)
+        self.sinewave_plot.getAxis("left").setTickSpacing(major=1, minor=0.1)
         self.sinewave_plot.addLegend(offset=[30, -30])
         self.sinewave_plot.disableAutoRange()
         self.sinewave_plot.setYRange(min=ymin, max=ymax, padding=0)
@@ -496,34 +467,34 @@ class PowerPlotApp(QMainWindow):
 
         self.sinewave_plot.addLine(
             x=0,
-            pen=pg.mkPen('w', width=2, style=Qt.DashLine),
+            pen=pg.mkPen("w", width=2, style=Qt.DashLine),
             z=-1,
-            )
+        )
         self.sinewave_plot.addLine(
             y=0,
-            pen=pg.mkPen('w', width=2, style=Qt.DashLine),
+            pen=pg.mkPen("w", width=2, style=Qt.DashLine),
             z=-1,
-            )
+        )
 
-        x_range = self.sinewave_plot.getAxis('bottom').range
+        x_range = self.sinewave_plot.getAxis("bottom").range
         self.deg_range = np.arange(x_range[0], x_range[1], step=1)
         # self.phi = np.arange(-np.pi, 3*np.pi, 4*np.pi/1000)
-        self.phi_range = self.deg_range/180*np.pi
+        self.phi_range = self.deg_range / 180 * np.pi
         # self.deg = self.phi/np.pi*180
 
         self.sinewave_lines = {}
-        self.sinewave_lines['U'] = self.sinewave_plot.plot(
-            pen=pg.mkPen('b', width=2),
-            name='U',
-            )
-        self.sinewave_lines['I'] = self.sinewave_plot.plot(
-            pen=pg.mkPen('r', width=2),
-            name='I',
-             )
-        self.sinewave_lines['S'] = self.sinewave_plot.plot(
-            pen=pg.mkPen('g', width=2),
-            name='P',
-            )
+        self.sinewave_lines["U"] = self.sinewave_plot.plot(
+            pen=pg.mkPen("b", width=2),
+            name="U",
+        )
+        self.sinewave_lines["I"] = self.sinewave_plot.plot(
+            pen=pg.mkPen("r", width=2),
+            name="I",
+        )
+        self.sinewave_lines["S"] = self.sinewave_plot.plot(
+            pen=pg.mkPen("g", width=2),
+            name="P",
+        )
 
         # # self.sinewave_lines['P'], = self.sinewave_plot.canvas.axes.plot(
         # #    self.phi, np.zeros(len(self.phi)), 'g', zorder=41)
@@ -531,18 +502,18 @@ class PowerPlotApp(QMainWindow):
         # #    self.phi, np.zeros(len(self.phi)), 'm', zorder=51)
 
         self.sinewave_valuelines = {}
-        self.sinewave_valuelines['U'] = self.sinewave_plot.addLine(
+        self.sinewave_valuelines["U"] = self.sinewave_plot.addLine(
             y=0,
-            pen=pg.mkPen('b', width=2, style=Qt.DotLine),
-            )
-        self.sinewave_valuelines['I'] = self.sinewave_plot.addLine(
+            pen=pg.mkPen("b", width=2, style=Qt.DotLine),
+        )
+        self.sinewave_valuelines["I"] = self.sinewave_plot.addLine(
             y=0,
-            pen=pg.mkPen('r', width=2, style=Qt.DotLine),
-            )
-        self.sinewave_valuelines['S'] = self.sinewave_plot.addLine(
+            pen=pg.mkPen("r", width=2, style=Qt.DotLine),
+        )
+        self.sinewave_valuelines["S"] = self.sinewave_plot.addLine(
             y=0,
-            pen=pg.mkPen('g', width=2, style=Qt.DotLine),
-            )
+            pen=pg.mkPen("g", width=2, style=Qt.DotLine),
+        )
 
     def update_calculations(self):
         self.Ucomplex = self.U()
@@ -553,98 +524,94 @@ class PowerPlotApp(QMainWindow):
 
     def update_plots(self):
         # plot phasor lines
-        self.phasor_lines['U'].setData(
+        self.phasor_lines["U"].setData(
             y=[0, np.imag(self.Ucomplex)],
             x=[0, np.real(self.Ucomplex)],
-            )
+        )
 
-        self.phasor_lines['I'].setData(
+        self.phasor_lines["I"].setData(
             y=[0, np.imag(self.Icomplex)],
             x=[0, np.real(self.Icomplex)],
-            )
+        )
 
-        self.phasor_lines['S'].setData(
+        self.phasor_lines["S"].setData(
             y=[np.imag(self.S0complex), np.imag(self.Scomplex)],
             x=[np.real(self.S0complex), np.real(self.Scomplex)],
-            )
+        )
 
         # self.phasor_lines['Q'].set_ydata([0,np.imag(S1())])
         # self.phasor_lines['P'].set_xdata([0,np.real(S1())])
 
         # plot phasor circles
-        phi_circle = np.arange(0, 2*np.pi, np.pi/180)
+        phi_circle = np.arange(0, 2 * np.pi, np.pi / 180)
 
         Ucircle = self.U(phi=phi_circle)
-        self.phasor_circles['U'].setData(
+        self.phasor_circles["U"].setData(
             x=np.real(Ucircle),
             y=np.imag(Ucircle),
-            )
+        )
 
         Icircle = self.I(phi=phi_circle)
-        self.phasor_circles['I'].setData(
+        self.phasor_circles["I"].setData(
             x=np.real(Icircle),
             y=np.imag(Icircle),
-            )
+        )
 
-        Scircle = self.S(phi=phi_circle/2)
-        self.phasor_circles['S'].setData(
+        Scircle = self.S(phi=phi_circle / 2)
+        self.phasor_circles["S"].setData(
             x=np.real(Scircle),
             y=np.imag(Scircle),
-            )
+        )
 
         # plot phasor values
-        self.phasor_values['U'].setValue(
+        self.phasor_values["U"].setValue(
             v=np.real(self.Ucomplex),
-            )
-        self.phasor_values['I'].setValue(
+        )
+        self.phasor_values["I"].setValue(
             v=np.real(self.Icomplex),
-            )
-        self.phasor_values['P'].setValue(
+        )
+        self.phasor_values["P"].setValue(
             v=np.real(self.Scomplex),
-            )
+        )
         # self.phasor_values['Q'].set_ydata(np.imag(S(inst_phi_rad))*np.ones(2))
 
         # update sinewave lines
         phi_waveform = self.phi_range + self.inst_phi_rad
 
         Uwaveform = np.real(self.U(phi=phi_waveform))
-        self.sinewave_lines['U'].setData(
+        self.sinewave_lines["U"].setData(
             x=self.deg_range,
             y=Uwaveform,
-            )
+        )
 
         Iwaveform = np.real(self.I(phi=phi_waveform))
-        self.sinewave_lines['I'].setData(
+        self.sinewave_lines["I"].setData(
             x=self.deg_range,
             y=Iwaveform,
-            )
+        )
 
         Swaveform = np.real(self.S(phi=phi_waveform))
-        self.sinewave_lines['S'].setData(
+        self.sinewave_lines["S"].setData(
             x=self.deg_range,
             y=Swaveform,
-            )
+        )
 
-        self.sinewave_valuelines['U'].setValue(
+        self.sinewave_valuelines["U"].setValue(
             v=np.real(self.Ucomplex),
-            )
-        self.sinewave_valuelines['I'].setValue(
+        )
+        self.sinewave_valuelines["I"].setValue(
             v=np.real(self.Icomplex),
-            )
-        self.sinewave_valuelines['S'].setValue(
+        )
+        self.sinewave_valuelines["S"].setValue(
             v=np.real(self.Scomplex),
-            )
+        )
 
     def reset_instantaneous_phase(self, phase=0):
         self.playback_button.clicked.disconnect(self.start_playback)
-        self.playback_thread.sig_step.connect(
-            self.animate_instantaneous_phase_to_zero
-            )
+        self.playback_thread.sig_step.connect(self.animate_instantaneous_phase_to_zero)
         self.i = 0
-        self.reset_animation_phi_deg = \
-            self.inst_phi_deg * self.RESET_ANIMATION
-        self.reset_animation_phi_rad = \
-            self.reset_animation_phi_deg / 180 * np.pi
+        self.reset_animation_phi_deg = self.inst_phi_deg * self.RESET_ANIMATION
+        self.reset_animation_phi_rad = self.reset_animation_phi_deg / 180 * np.pi
         self.playback_thread.start()
 
     def animate_instantaneous_phase_to_zero(self):
@@ -657,26 +624,23 @@ class PowerPlotApp(QMainWindow):
             self.playback_thread.stop()
             self.playback_thread.sig_step.disconnect(
                 self.animate_instantaneous_phase_to_zero
-                )
+            )
             self.inst_phi_deg = 0
             self.inst_phi_rad = 0
             self.set_instantaneous_phase()
             self.playback_button.clicked.connect(self.start_playback)
 
     def increment_instantaneous_phase(self):
-        self.inst_phi_deg = \
-            (self.inst_phi_deg + self.playback_stepsize + 180) % 360 - 180
+        self.inst_phi_deg = (
+            self.inst_phi_deg + self.playback_stepsize + 180
+        ) % 360 - 180
         self.inst_phi_rad = self.inst_phi_deg / 180 * np.pi
         self.set_instantaneous_phase()
 
     def set_instantaneous_phase(self):
-        self.instantaneous_phase_angle.setValue(
-            (self.inst_phi_deg + 90 + 360) % 360
-            )
+        self.instantaneous_phase_angle.setValue((self.inst_phi_deg + 90 + 360) % 360)
         self.update_calculations()
-        self.instantaneous_phase_display.setText(
-            "{:0.0f}".format(self.inst_phi_deg)
-            )
+        self.instantaneous_phase_display.setText("{:0.0f}".format(self.inst_phi_deg))
         self.update_plots()
 
 
@@ -688,5 +652,5 @@ def main():
     app.exec_()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
